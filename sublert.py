@@ -27,6 +27,10 @@ import time
 version = "1.4.7"
 requests.packages.urllib3.disable_warnings()
 
+
+def colored(data, color):
+    return data
+
 def banner():
     print('''
                    _____       __    __          __
@@ -353,21 +357,22 @@ def posting_to_slack(result, dns_resolve, dns_output): #sending result to slack 
 
             unique_list = list(set(new_subdomains) & set(dns_result.keys())) #filters non-resolving subdomains from new_subdomains list
 
+            data = None
             for subdomain in unique_list:
                 data = "{}:new: {}".format(at_channel(), subdomain)
                 slack(data)
                 try:
                     if dns_result[subdomain]["A"]:
                         for i in dns_result[subdomain]["A"]:
-                            data = "```A : {}```".format(i)
-                            slack(data)
+                            data += "\n```A : {}```".format(i)
                 except: pass
                 try:
                     if dns_result[subdomain]['CNAME']:
                         for i in dns_result[subdomain]['CNAME']:
-                            data = "```CNAME : {}```".format(i)
-                            slack(data)
+                            data = "\n```CNAME : {}```".format(i)
                 except: pass
+            if data:
+                slack(data)
             print(colored("\n[!] Done. ", "green"))
             rev_url = list(set(rev_url))
             for url in rev_url:
@@ -378,11 +383,12 @@ def posting_to_slack(result, dns_resolve, dns_output): #sending result to slack 
     elif result:
         rev_url = []
         print(colored("\n[!] Exporting the result to Slack. Please don't interrupt!", "red"))
+        data = "{}:new".format(at_channel())
         for url in result:
             url = "https://" + url.replace('+ ', '')
             rev_url.append(get_fld(url))
-            data = "{}:new: {}".format(at_channel(), url)
-            slack(data)
+            data += "\n{}".format(url)
+        slack(data)
         print(colored("\n[!] Done. ", "green"))
         rev_url = list(set(rev_url))
 
